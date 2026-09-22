@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (scrollPosition > headerThreshold && scrollPosition < heroBottom) {
                 isSnapping = true;
                 // Scroll so the profile card appears right below the fixed header (~70px)
-                const targetY = cardContent.offsetTop - 70;
+                const targetY = cardContent.offsetTop - 100;
                 window.scrollTo({ top: targetY, behavior: 'smooth' });
                 setTimeout(() => { isSnapping = false; }, 1000);
             }
