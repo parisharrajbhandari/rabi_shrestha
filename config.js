@@ -13,6 +13,7 @@ const BUSINESS_CONFIG = {
         lastName: "Shrestha",
         fullName: "Mr. Rabi Shrestha",       // Displayed in header & vCard
         title: "Proprietor",              // Job title / designation
+        profilePhoto: "image/profile_photo.jpg",  // Profile photo for card & vCard
     },
 
     // --- Company Details ---
@@ -52,6 +53,11 @@ const BUSINESS_CONFIG = {
             platform: "Facebook",
             url: "https://www.facebook.com/rabin.shrestha.5095",
             icon: "fab fa-facebook-f",
+        },
+        {
+            platform: "Website",
+            url: "https://eurogreenmotors.tappoo.workers.dev/",
+            icon: "fa-solid fa-globe",
         },
     ],
 

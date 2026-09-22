@@ -14,11 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logoEl.alt = cfg.logo.alt;
     }
 
-    // --- Header: Person Details (shown when scrolled) ---
-    const personNameEl = document.getElementById('person-name');
-    const personTitleEl = document.getElementById('person-title');
-    if (personNameEl) personNameEl.textContent = cfg.person.fullName;
-    if (personTitleEl) personTitleEl.textContent = cfg.person.title;
 
     // --- First Page: Company Name (shown on logo page) ---
     const companyNameEl = document.getElementById('company-name');
@@ -42,6 +37,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnEmail) btnEmail.href = `mailto:${cfg.contact.email}`;
     if (btnLocation) btnLocation.href = cfg.contact.locationUrl;
     if (btnReview) btnReview.href = cfg.contact.reviewUrl;
+
+    // --- Profile Card (above social links) ---
+    const profileImg = document.getElementById('profile-img');
+    const profileName = document.getElementById('profile-name');
+    const profileTitle = document.getElementById('profile-title');
+    const profileCompany = document.getElementById('profile-company');
+    if (profileImg) {
+        profileImg.src = cfg.person.profilePhoto;
+        profileImg.alt = cfg.person.fullName;
+    }
+    if (profileName) profileName.textContent = cfg.person.fullName;
+    if (profileTitle) profileTitle.textContent = cfg.person.title;
+    if (profileCompany) profileCompany.textContent = cfg.company.name;
 
     // --- Social Media Icons (dynamically generated) ---
     const socialBar = document.getElementById('social-bar');
@@ -67,9 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const header = document.getElementById('header');
     const scrollIndicator = document.getElementById('scroll-indicator');
     const contactsSection = document.getElementById('contacts-section');
+    const cardContent = document.getElementById('card-content');
 
-    // Threshold in pixels to trigger the animation
+    // Threshold in pixels to trigger the snap
     const headerThreshold = 10;
+    let isSnapping = false;
 
     // Listen for scroll events on the window
     window.addEventListener('scroll', () => {
@@ -92,6 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (contactsSection) contactsSection.classList.remove('visible');
         }
+
+        // Step 3: Auto-snap to content section when user starts scrolling down
+        if (!isSnapping && cardContent) {
+            const heroBottom = document.getElementById('hero')?.offsetTop + document.getElementById('hero')?.offsetHeight || 0;
+            if (scrollPosition > headerThreshold && scrollPosition < heroBottom) {
+                isSnapping = true;
+                cardContent.scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => { isSnapping = false; }, 800);
+            }
+        }
     });
 
     // ============================================================
@@ -99,8 +119,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     const saveContactBtn = document.getElementById('btn-save-contact');
     if (saveContactBtn) {
-        saveContactBtn.addEventListener('click', (e) => {
+        saveContactBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+
+            // Convert profile photo to base64 for vCard
+            let photoBase64 = cfg.vcard.photoBase64 || '';
+            let photoType = 'PNG';
+            if (cfg.person.profilePhoto) {
+                try {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = cfg.person.profilePhoto;
+                    });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    photoBase64 = dataUrl.split(',')[1];
+                    photoType = 'JPEG';
+                } catch (err) {
+                    console.warn('Could not convert profile photo for vCard:', err);
+                }
+            }
 
             // Build social URL lines dynamically
             const socialUrlLines = cfg.socials.map(s =>
@@ -116,31 +161,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 `TEL;TYPE=${p.label.toUpperCase()},VOICE:${p.number}`
             ).join('\n');
 
+            // Find website URL from socials
+            const websiteSocial = cfg.socials.find(s => s.platform.toLowerCase() === 'website');
+            const websiteLine = websiteSocial ? `URL;type=Website:${websiteSocial.url}` : '';
+
             const vcardContent = [
                 'BEGIN:VCARD',
                 'VERSION:3.0',
-                // Company name as the primary display name for the contact
-                `FN:${cfg.company.name}`,
-                `N:${cfg.company.name};;;;`,
+                // Personal name as the primary display name for the contact
+                `FN:${cfg.person.fullName}`,
+                `N:${cfg.person.lastName};${cfg.person.firstName};${cfg.person.middleName || ''};;`,
                 `ORG:${cfg.company.name}`,
-                `TITLE:${cfg.person.fullName} - ${cfg.person.title}`,
+                `TITLE:${cfg.person.title}`,
                 `NOTE:${cfg.vcard.contactNote}`,
-                `PHOTO;ENCODING=b;TYPE=PNG:${cfg.vcard.photoBase64}`,
+                `PHOTO;ENCODING=b;TYPE=${photoType}:${photoBase64}`,
                 phoneLines,
                 `EMAIL;TYPE=PREF,INTERNET:${cfg.contact.email}`,
+                websiteLine,
                 `URL;type=Location:${cfg.contact.locationUrl}`,
                 `URL;type=WhatsApp:https://wa.me/${cfg.contact.whatsapp}`,
                 socialUrlLines,
                 socialProfileLines,
                 `ADR;TYPE=WORK:;;${cfg.vcard.addressStreet};${cfg.vcard.addressCity};${cfg.vcard.addressState};;${cfg.vcard.addressCountry}`,
                 'END:VCARD',
-            ].join('\n');
+            ].filter(line => line !== '').join('\n');
 
             const blob = new Blob([vcardContent], { type: 'text/vcard;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${cfg.company.name.replace(/\s+/g, '_')}.vcf`;
+            link.download = `${cfg.person.fullName.replace(/\s+/g, '_')}.vcf`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
