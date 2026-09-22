@@ -70,50 +70,99 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // SCROLL ANIMATIONS
+    // SCROLL ANIMATIONS & SNAP
     // ============================================================
     const header = document.getElementById('header');
     const scrollIndicator = document.getElementById('scroll-indicator');
     const contactsSection = document.getElementById('contacts-section');
     const cardContent = document.getElementById('card-content');
+    const hero = document.getElementById('hero');
 
-    // Threshold in pixels to trigger the snap
     const headerThreshold = 10;
     let isSnapping = false;
 
-    // Listen for scroll events on the window
+    // Calculate the snap target: profile card just below the fixed header
+    function getSnapTarget() {
+        return cardContent ? cardContent.offsetTop - 100 : 0;
+    }
+
+    // Smooth scroll to a fixed position
+    function snapTo(targetY) {
+        if (isSnapping) return;
+        isSnapping = true;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+        // Re-enable after scroll animation completes
+        const checkDone = () => {
+            const current = window.scrollY;
+            if (Math.abs(current - targetY) < 2) {
+                isSnapping = false;
+            } else {
+                requestAnimationFrame(checkDone);
+            }
+        };
+        // Fallback: force unlock after 1.2s in case smooth scroll stalls
+        setTimeout(() => { isSnapping = false; }, 1200);
+        requestAnimationFrame(checkDone);
+    }
+
+    // --- Intercept mouse wheel to snap between sections ---
+    window.addEventListener('wheel', (e) => {
+        if (isSnapping) { e.preventDefault(); return; }
+
+        const scrollY = window.scrollY;
+        const snapTarget = getSnapTarget();
+
+        // Scrolling DOWN while on the hero section → snap to content
+        if (e.deltaY > 0 && scrollY < snapTarget - 5) {
+            e.preventDefault();
+            snapTo(snapTarget);
+        }
+        // Scrolling UP while at the content section → snap back to top
+        else if (e.deltaY < 0 && scrollY <= snapTarget + 5 && scrollY > 5) {
+            e.preventDefault();
+            snapTo(0);
+        }
+    }, { passive: false });
+
+    // --- Intercept touch swipe to snap between sections (mobile) ---
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (isSnapping) return;
+
+        const touchDelta = touchStartY - e.touches[0].clientY;
+        const scrollY = window.scrollY;
+        const snapTarget = getSnapTarget();
+
+        // Swiping UP (scroll down) while on hero → snap to content
+        if (touchDelta > 30 && scrollY < snapTarget - 5) {
+            e.preventDefault();
+            snapTo(snapTarget);
+        }
+        // Swiping DOWN (scroll up) while at content → snap back to top
+        else if (touchDelta < -30 && scrollY <= snapTarget + 5 && scrollY > 5) {
+            e.preventDefault();
+            snapTo(0);
+        }
+    }, { passive: false });
+
+    // --- Header & contacts animation (visual only, no snapping) ---
     window.addEventListener('scroll', () => {
         const scrollPosition = window.scrollY || document.documentElement.scrollTop;
 
-        // Step 1: Header Shrink & Initial Text Fade
         if (scrollPosition > headerThreshold) {
             header.classList.add('scrolled');
             if (companyNameEl) companyNameEl.classList.add('hidden');
             if (scrollIndicator) scrollIndicator.classList.add('hidden');
+            if (contactsSection) contactsSection.classList.add('visible');
         } else {
             header.classList.remove('scrolled');
             if (companyNameEl) companyNameEl.classList.remove('hidden');
             if (scrollIndicator) scrollIndicator.classList.remove('hidden');
-        }
-
-        // Step 2: Contacts Fade In
-        if (scrollPosition > headerThreshold) {
-            if (contactsSection) contactsSection.classList.add('visible');
-        } else {
             if (contactsSection) contactsSection.classList.remove('visible');
-        }
-
-        // Step 3: Auto-snap to content section when user starts scrolling down
-        if (!isSnapping && cardContent) {
-            const hero = document.getElementById('hero');
-            const heroBottom = (hero?.offsetTop || 0) + (hero?.offsetHeight || 0);
-            if (scrollPosition > headerThreshold && scrollPosition < heroBottom) {
-                isSnapping = true;
-                // Scroll so the profile card appears right below the fixed header (~70px)
-                const targetY = cardContent.offsetTop - 120;
-                window.scrollTo({ top: targetY, behavior: 'smooth' });
-                setTimeout(() => { isSnapping = false; }, 1000);
-            }
         }
     });
 
