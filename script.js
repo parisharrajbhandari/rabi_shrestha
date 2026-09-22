@@ -70,98 +70,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // SCROLL ANIMATIONS & SNAP
+    // SCROLL ANIMATIONS
     // ============================================================
     const header = document.getElementById('header');
     const scrollIndicator = document.getElementById('scroll-indicator');
     const contactsSection = document.getElementById('contacts-section');
-    const cardContent = document.getElementById('card-content');
-    const hero = document.getElementById('hero');
 
+    // Threshold in pixels to trigger the animation
     const headerThreshold = 10;
-    let isSnapping = false;
 
-    // Calculate the snap target: profile card just below the fixed header
-    function getSnapTarget() {
-        return cardContent ? cardContent.offsetTop - 100 : 0;
-    }
-
-    // Smooth scroll to a fixed position
-    function snapTo(targetY) {
-        if (isSnapping) return;
-        isSnapping = true;
-        window.scrollTo({ top: targetY, behavior: 'smooth' });
-        // Re-enable after scroll animation completes
-        const checkDone = () => {
-            const current = window.scrollY;
-            if (Math.abs(current - targetY) < 2) {
-                isSnapping = false;
-            } else {
-                requestAnimationFrame(checkDone);
-            }
-        };
-        // Fallback: force unlock after 1.2s in case smooth scroll stalls
-        setTimeout(() => { isSnapping = false; }, 1200);
-        requestAnimationFrame(checkDone);
-    }
-
-    // --- Intercept mouse wheel to snap between sections ---
-    window.addEventListener('wheel', (e) => {
-        if (isSnapping) { e.preventDefault(); return; }
-
-        const scrollY = window.scrollY;
-        const snapTarget = getSnapTarget();
-
-        // Scrolling DOWN while on the hero section → snap to content
-        if (e.deltaY > 0 && scrollY < snapTarget - 5) {
-            e.preventDefault();
-            snapTo(snapTarget);
-        }
-        // Scrolling UP while at the content section → snap back to top
-        else if (e.deltaY < 0 && scrollY <= snapTarget + 5 && scrollY > 5) {
-            e.preventDefault();
-            snapTo(0);
-        }
-    }, { passive: false });
-
-    // --- Intercept touch swipe to snap between sections (mobile) ---
-    let touchStartY = 0;
-    window.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-        if (isSnapping) return;
-
-        const touchDelta = touchStartY - e.touches[0].clientY;
-        const scrollY = window.scrollY;
-        const snapTarget = getSnapTarget();
-
-        // Swiping UP (scroll down) while on hero → snap to content
-        if (touchDelta > 30 && scrollY < snapTarget - 5) {
-            e.preventDefault();
-            snapTo(snapTarget);
-        }
-        // Swiping DOWN (scroll up) while at content → snap back to top
-        else if (touchDelta < -30 && scrollY <= snapTarget + 5 && scrollY > 5) {
-            e.preventDefault();
-            snapTo(0);
-        }
-    }, { passive: false });
-
-    // --- Header & contacts animation (visual only, no snapping) ---
+    // Listen for scroll events on the window
     window.addEventListener('scroll', () => {
         const scrollPosition = window.scrollY || document.documentElement.scrollTop;
 
+        // Step 1: Header Shrink & Initial Text Fade
         if (scrollPosition > headerThreshold) {
             header.classList.add('scrolled');
             if (companyNameEl) companyNameEl.classList.add('hidden');
             if (scrollIndicator) scrollIndicator.classList.add('hidden');
-            if (contactsSection) contactsSection.classList.add('visible');
         } else {
             header.classList.remove('scrolled');
             if (companyNameEl) companyNameEl.classList.remove('hidden');
             if (scrollIndicator) scrollIndicator.classList.remove('hidden');
+        }
+
+        // Step 2: Contacts Fade In
+        if (scrollPosition > headerThreshold) {
+            if (contactsSection) contactsSection.classList.add('visible');
+        } else {
             if (contactsSection) contactsSection.classList.remove('visible');
         }
     });
@@ -213,10 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `TEL;TYPE=${p.label.toUpperCase()},VOICE:${p.number}`
             ).join('\n');
 
-            // Find website URL from socials
-            const websiteSocial = cfg.socials.find(s => s.platform.toLowerCase() === 'website');
-            const websiteLine = websiteSocial ? `URL;type=Website:${websiteSocial.url}` : '';
-
             const vcardContent = [
                 'BEGIN:VCARD',
                 'VERSION:3.0',
@@ -229,14 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 `PHOTO;ENCODING=b;TYPE=${photoType}:${photoBase64}`,
                 phoneLines,
                 `EMAIL;TYPE=PREF,INTERNET:${cfg.contact.email}`,
-                websiteLine,
                 `URL;type=Location:${cfg.contact.locationUrl}`,
                 `URL;type=WhatsApp:https://wa.me/${cfg.contact.whatsapp}`,
                 socialUrlLines,
                 socialProfileLines,
                 `ADR;TYPE=WORK:;;${cfg.vcard.addressStreet};${cfg.vcard.addressCity};${cfg.vcard.addressState};;${cfg.vcard.addressCountry}`,
                 'END:VCARD',
-            ].filter(line => line !== '').join('\n');
+            ].join('\n');
 
             const blob = new Blob([vcardContent], { type: 'text/vcard;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
