@@ -105,11 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Step 3: Auto-snap to content section when user starts scrolling down
         if (!isSnapping && cardContent) {
-            const heroBottom = document.getElementById('hero')?.offsetTop + document.getElementById('hero')?.offsetHeight || 0;
+            const hero = document.getElementById('hero');
+            const heroBottom = (hero?.offsetTop || 0) + (hero?.offsetHeight || 0);
             if (scrollPosition > headerThreshold && scrollPosition < heroBottom) {
                 isSnapping = true;
-                cardContent.scrollIntoView({ behavior: 'smooth' });
-                setTimeout(() => { isSnapping = false; }, 800);
+                // Scroll so the profile card appears right below the fixed header (~70px)
+                const targetY = cardContent.offsetTop - 70;
+                window.scrollTo({ top: targetY, behavior: 'smooth' });
+                setTimeout(() => { isSnapping = false; }, 1000);
             }
         }
     });
