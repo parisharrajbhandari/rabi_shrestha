@@ -71,7 +71,7 @@ const BUSINESS_CONFIG = {
     vcard: {
         // This note will be saved with the contact on the device.
         // Customize it to include any info you want the recipient to see.
-        contactNote: "Proprietor of Euro Green Motors Pvt. Ltd. and Euro Green Auto Care Pvt. Ltd. An Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan.",
+        contactNote: "CEO of Euro Green Motors Pvt. Ltd. and Euro Green Auto Care Pvt. Ltd. An Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan.",
         addressStreet: "BYD Chitwan",
         addressCity: "Chitwan",
         addressState: "Bagmati",
