@@ -8,11 +8,11 @@ const BUSINESS_CONFIG = {
 
     // --- Personal Details ---
     person: {
-        firstName: "Rabi",
-        middleName: "",
+        firstName: "Rabin",
+        middleName: "Kumar",
         lastName: "Shrestha",
-        fullName: "Mr. Rabi Shrestha",       // Displayed in header & vCard
-        title: "CEO",              // Job title / designation
+        fullName: "Mr. Rabin Kumar Shrestha",       // Displayed in header & vCard
+        title: "Managing Director",              // Job title / designation
         profilePhoto: "image/profile_photo.jpg",  // Profile photo for card & vCard
     },
 
@@ -21,7 +21,7 @@ const BUSINESS_CONFIG = {
         name: "Euro Green Motors Pvt. Ltd.",    // Displayed in header & page title
         tagline: "Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan",               // Used in the page <title>
         aboutHeading: "About ME",     // Heading for the about section
-        aboutText: `CEO of Euro Green Motors Pvt. Ltd. and Euro Green Auto Care Pvt. Ltd. An Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan.`,
+        aboutText: `Managing Director of Euro Green Motors Pvt. Ltd. and Euro Green Auto Care Pvt. Ltd. An Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan.`,
     },
 
     // --- Contact Details ---
@@ -71,7 +71,7 @@ const BUSINESS_CONFIG = {
     vcard: {
         // This note will be saved with the contact on the device.
         // Customize it to include any info you want the recipient to see.
-        contactNote: "CEO of Euro Green Motors Pvt. Ltd. and Euro Green Auto Care Pvt. Ltd. An Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan.",
+        contactNote: "Managing Director of Euro Green Motors Pvt. Ltd. and Euro Green Auto Care Pvt. Ltd. An Authorized Dealer of BYD Auto Industry CO. Ltd. for Chitwan.",
         addressStreet: "BYD Chitwan",
         addressCity: "Chitwan",
         addressState: "Bagmati",
